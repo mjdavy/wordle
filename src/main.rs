@@ -1,41 +1,40 @@
-use std::{ fs::File, io::{BufReader, BufRead, Write}};
+use std::{ fs::File, io::{BufReader, BufRead, Write}, collections::HashSet};
 use text_colorizer::*;
 use rand::Rng;
 
 fn main() {
-    // print the current working directory
-    let cwd = std::env::current_dir().unwrap();
-    println!("Current working directory: {}", cwd.display());
 
-    let word_list = load_word_list("words_alpha.txt");
-
-    // extract all five letter words from word_list
-    let mut five_letter_words = Vec::new();
-    for word in word_list {
-        if word.len() == 5 {
-            five_letter_words.push(word);
-        }
-    }
+    let words = load_word_list("words.txt", 5);
+    println!("There are {} five letter words in the word list", words.len());
 
     // pick a random five-letter word
     let mut rng = rand::thread_rng();
-    let random_index = rng.gen_range(0..five_letter_words.len());
-    let random_word = &five_letter_words[random_index];
+    let random_index = rng.gen_range(0..words.len());
+    let random_word = words.iter().nth(random_index).unwrap();
 
     // prompt the user to enter a five letter word as a guess at random_word
     // keep prompting until the user enters a five letter word or until six tries
     let mut tries = 0;
-    
+
+    println!("\n\nWelcome to wordle! Can you guess the word in six tries?\n");
+    println!("The word is five letters long. If you guess a letter that is in the word, but not in the correct position, it will be printed in red."); 
+    println!("If you guess a letter that is in the word and in the correct position, it will be printed in green bold. If you guess a letter that is not in the word, it will be printed normally.\n");
     
     while tries < 6 {
         let mut guess = String::new();
         let mut char_meta = vec![0; 5]; // 0 = normal, 1 = green bold, 2 = red
-        print!("Enter a five letter word: ");
+       
         std::io::stdout().flush().unwrap();
         std::io::stdin().read_line(&mut guess).expect("Failed to read line");
         guess = guess.trim().to_string();
+
+        // validate the guess - the word must be five letters and in the set of words
         if guess.len() != 5 {
             println!("You must enter a five letter word");
+            continue;
+        }
+        else if !words.contains(&guess) {
+            println!("{} is not a word in my list", guess);
             continue;
         }
         if guess == *random_word {
@@ -68,15 +67,23 @@ fn main() {
 
 }
 
-fn load_word_list(words:&str) -> Vec<String>
+// load the word list from the file and return a set of all n-letter words where n is between 1 and 10
+fn load_word_list(filename:&str, word_length:u8) -> HashSet<String>
 {
-    let mut word_list = Vec::new();
-    let file = File::open(words).expect("Unable to open file");
-    let reader = BufReader::new(file);
-    for line in reader.lines() {
-        word_list.push(line.unwrap());
+    if word_length < 1 || word_length > 10 {
+        panic!("word length must be between 1 and 10");
     }
-    word_list
+
+    let file = File::open(filename).unwrap();
+    let reader = BufReader::new(file);
+    let mut words_set = HashSet::new();
+    for line in reader.lines() {
+        let word = line.unwrap();
+        if word.len() == word_length as usize {
+            words_set.insert(word);
+        }
+    }
+    words_set
 }
 
 //
