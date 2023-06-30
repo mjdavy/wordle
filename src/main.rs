@@ -4,13 +4,15 @@ use rand::Rng;
 
 fn main() {
 
-    let words = load_word_list("words.txt", 5);
+    let words = load_word_list("popular.txt", 5);
     println!("There are {} five letter words in the word list", words.len());
 
     // pick a random five-letter word
     let mut rng = rand::thread_rng();
     let random_index = rng.gen_range(0..words.len());
     let random_word = words.iter().nth(random_index).unwrap();
+
+    let words = load_word_list("words.txt", 5);
 
     // prompt the user to enter a five letter word as a guess at random_word
     // keep prompting until the user enters a five letter word or until six tries
@@ -63,7 +65,7 @@ fn main() {
         guess.clear();
     }
     // print the word in green
-    println!("{}", random_word.green().bold());
+    println!("\nThe word is {}. Better luck next time!\n", random_word.green().bold());
 
 }
 
